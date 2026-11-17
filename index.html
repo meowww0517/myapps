@@ -93,6 +93,15 @@
             grid-column: 1 / -1;
         }
 
+        .form-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
         .form-label {
             display: block;
             font-weight: 700;
@@ -100,9 +109,47 @@
             color: #374151;
             margin-bottom: 10px;
         }
+        .form-label-row .form-label {
+            margin-bottom: 0;
+        }
 
-        /* --- セレクトボックス --- */
-        select {
+        /* --- 入力方法切り替えタブ（3パターン） --- */
+        .mode-tabs {
+            display: inline-grid;
+            grid-template-columns: repeat(3, 1fr);
+            background-color: #e5e7eb;
+            padding: 3px;
+            border-radius: 8px;
+            gap: 3px;
+        }
+        @media (max-width: 520px) {
+            .mode-tabs {
+                width: 100%;
+            }
+        }
+        .mode-tab {
+            border: none;
+            background: transparent;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .mode-tab:hover {
+            color: var(--text-main);
+        }
+        .mode-tab.active {
+            background-color: #ffffff;
+            color: var(--primary-color);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+        }
+
+        /* --- セレクトボックス・数値入力 --- */
+        select, input[type="number"] {
             width: 100%;
             padding: 12px 14px;
             border: 1px solid var(--border-color);
@@ -111,23 +158,34 @@
             color: var(--text-main);
             font-size: 15px;
             outline: none;
-            cursor: pointer;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-        select:hover, select:focus {
+        select {
+            cursor: pointer;
+        }
+        select:hover, select:focus,
+        input[type="number"]:hover, input[type="number"]:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
         }
 
-        /* --- ギガ数スライダー --- */
+        /* --- ギガ数エリア（共通レイアウト） --- */
         .giga-wrapper {
             display: flex;
             align-items: center;
             gap: 20px;
         }
-        .slider-box {
+        .giga-input-area {
             flex-grow: 1;
         }
+        .giga-mode-panel {
+            display: none;
+        }
+        .giga-mode-panel.active {
+            display: block;
+        }
+
+        /* パターン1：スライダー */
         input[type="range"] {
             -webkit-appearance: none;
             appearance: none;
@@ -165,7 +223,6 @@
             cursor: pointer;
         }
 
-        /* スライダー目盛り（ツマミの中心位置に正確に一致させる配置） */
         .slider-scale {
             position: relative;
             height: 20px;
@@ -179,13 +236,36 @@
             transform: translateX(-50%);
             white-space: nowrap;
         }
-        /* ツマミ幅24pxを考慮した正確な割合位置（min=1, max=120） */
-        .slider-scale span:nth-child(1) { left: calc(12px + (100% - 24px) * 0); }      /* 1GB */
-        .slider-scale span:nth-child(2) { left: calc(12px + (100% - 24px) * 0.2437); } /* 30GB (29/119) */
-        .slider-scale span:nth-child(3) { left: calc(12px + (100% - 24px) * 0.4958); } /* 60GB (59/119) */
-        .slider-scale span:nth-child(4) { left: calc(12px + (100% - 24px) * 0.7479); } /* 90GB (89/119) */
-        .slider-scale span:nth-child(5) { left: calc(12px + (100% - 24px) * 1); }      /* 120GB (119/119) */
+        .slider-scale span:nth-child(1) { left: calc(12px + (100% - 24px) * 0); }
+        .slider-scale span:nth-child(2) { left: calc(12px + (100% - 24px) * 0.2437); }
+        .slider-scale span:nth-child(3) { left: calc(12px + (100% - 24px) * 0.4958); }
+        .slider-scale span:nth-child(4) { left: calc(12px + (100% - 24px) * 0.7479); }
+        .slider-scale span:nth-child(5) { left: calc(12px + (100% - 24px) * 1); }
 
+        /* パターン2：数値直接入力 */
+        .number-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .number-input-row input[type="number"] {
+            max-width: 160px;
+            font-size: 18px;
+            font-weight: 700;
+            text-align: right;
+        }
+        .number-unit-label {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .input-helper-text {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-top: 6px;
+        }
+
+        /* 右側の現在ギガ数バッジ */
         .giga-badge {
             background-color: var(--primary-light);
             border: 2px solid var(--primary-color);
@@ -436,20 +516,56 @@
     
     <!-- 入力フォーム -->
     <div class="form-grid">
-        <!-- 1. ギガ数選択 -->
+        <!-- 1. ギガ数選択（3パターン切り替え対応） -->
         <div class="form-card full-width">
-            <label class="form-label" for="giga">1. 1ヶ月に必要なデータ通信量</label>
+            <div class="form-label-row">
+                <label class="form-label" for="giga">1. 1ヶ月に必要なデータ通信量</label>
+                <div class="mode-tabs" role="tablist" aria-label="データ通信量の入力方法">
+                    <button type="button" class="mode-tab active" data-mode="slider" onclick="switchGigaMode('slider')">スライダー</button>
+                    <button type="button" class="mode-tab" data-mode="number" onclick="switchGigaMode('number')">数字で入力</button>
+                    <button type="button" class="mode-tab" data-mode="preset" onclick="switchGigaMode('preset')">目安から選択</button>
+                </div>
+            </div>
+
             <div class="giga-wrapper">
-                <div class="slider-box">
-                    <input type="range" id="giga" min="1" max="120" value="20" oninput="updateGigaText(this.value)">
-                    <div class="slider-scale">
-                        <span>1GB</span>
-                        <span>30GB</span>
-                        <span>60GB</span>
-                        <span>90GB</span>
-                        <span>120GB</span>
+                <div class="giga-input-area">
+                    <!-- パターン1：スライダー -->
+                    <div id="panel-slider" class="giga-mode-panel active">
+                        <input type="range" id="giga" min="1" max="120" value="20" oninput="syncGigaFromSlider(this.value)">
+                        <div class="slider-scale">
+                            <span>1GB</span>
+                            <span>30GB</span>
+                            <span>60GB</span>
+                            <span>90GB</span>
+                            <span>120GB</span>
+                        </div>
+                    </div>
+
+                    <!-- パターン2：数字で直接入力 -->
+                    <div id="panel-number" class="giga-mode-panel">
+                        <div class="number-input-row">
+                            <input type="number" id="giga-number" min="1" max="120" value="20" oninput="syncGigaFromNumber(this.value)" onblur="finalizeGigaNumber(this.value)">
+                            <span class="number-unit-label">GB / 月</span>
+                        </div>
+                        <div class="input-helper-text">※1〜120GBの間で半角数字を入力してください</div>
+                    </div>
+
+                    <!-- パターン3：範囲（目安）から選択 -->
+                    <div id="panel-preset" class="giga-mode-panel">
+                        <select id="giga-preset" onchange="syncGigaFromPreset(this.value)">
+                            <option value="1">1GB以下（ほとんど使わない・自宅Wi-Fiのみ）</option>
+                            <option value="3">1GB超 〜 3GB以下（連絡・検索中心）</option>
+                            <option value="5">3GB超 〜 5GB以下（ライト利用・SNS中心）</option>
+                            <option value="10">5GB超 〜 10GB以下（標準・外出先でも少し利用）</option>
+                            <option value="20" selected>10GB超 〜 20GB以下（標準・動画も視聴）</option>
+                            <option value="30">20GB超 〜 30GB以下（たっぷり利用）</option>
+                            <option value="35">30GB超 〜 35GB以下（サブブランド大容量上限）</option>
+                            <option value="100">35GB超・無制限（ギガを気にせず使い放題）</option>
+                        </select>
+                        <div class="input-helper-text">※各社の料金プランが切り替わる容量区分から選べます</div>
                     </div>
                 </div>
+
                 <div class="giga-badge">
                     <span class="num" id="giga-val">20</span>
                     <span class="unit">GB</span>
@@ -550,15 +666,83 @@
         }
     };
 
-    function updateGigaText(val) {
-        document.getElementById('giga-val').innerText = val;
-        const slider = document.getElementById('giga');
-        const percent = ((val - slider.min) / (slider.max - slider.min)) * 100;
-        slider.style.background = `linear-gradient(to right, #1d4ed8 0%, #1d4ed8 ${percent}%, #d1d5db ${percent}%, #d1d5db 100%)`;
+    /* ====================================================
+       🎛️ ギガ数入力の3モード切り替え＆状態同期ロジック
+       ==================================================== */
+    let currentGiga = 20;
+
+    function switchGigaMode(mode) {
+        // タブのアクティブ状態切り替え
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.mode === mode);
+        });
+        // パネルの表示切り替え
+        document.querySelectorAll('.giga-mode-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        document.getElementById(`panel-${mode}`).classList.add('active');
     }
 
+    function applyGigaValue(giga, source) {
+        const clamped = Math.min(120, Math.max(1, parseInt(giga, 10) || 1));
+        currentGiga = clamped;
+
+        // バッジ更新
+        document.getElementById('giga-val').innerText = clamped;
+
+        // スライダーとバーの色を同期
+        const slider = document.getElementById('giga');
+        slider.value = clamped;
+        const percent = ((clamped - 1) / (120 - 1)) * 100;
+        slider.style.background = `linear-gradient(to right, #1d4ed8 0%, #1d4ed8 ${percent}%, #d1d5db ${percent}%, #d1d5db 100%)`;
+
+        // 数値入力欄を同期（入力中の文字消去を邪魔しないようsourceがnumber以外のとき更新）
+        if (source !== 'number') {
+            document.getElementById('giga-number').value = clamped;
+        }
+
+        // 目安プルダウンを同期
+        if (source !== 'preset') {
+            const presetSelect = document.getElementById('giga-preset');
+            if (clamped <= 1) presetSelect.value = '1';
+            else if (clamped <= 3) presetSelect.value = '3';
+            else if (clamped <= 5) presetSelect.value = '5';
+            else if (clamped <= 10) presetSelect.value = '10';
+            else if (clamped <= 20) presetSelect.value = '20';
+            else if (clamped <= 30) presetSelect.value = '30';
+            else if (clamped <= 35) presetSelect.value = '35';
+            else presetSelect.value = '100';
+        }
+    }
+
+    function syncGigaFromSlider(val) {
+        applyGigaValue(val, 'slider');
+    }
+
+    function syncGigaFromNumber(val) {
+        if (val === '') return; // 入力途中で空欄にした瞬間は上書きしない
+        applyGigaValue(val, 'number');
+    }
+
+    function finalizeGigaNumber(val) {
+        // フォーカスが外れた際に範囲外の値や空欄を1〜120に整える
+        const clamped = Math.min(120, Math.max(1, parseInt(val, 10) || 1));
+        document.getElementById('giga-number').value = clamped;
+        applyGigaValue(clamped, 'number');
+    }
+
+    function syncGigaFromPreset(val) {
+        applyGigaValue(val, 'preset');
+    }
+
+    /* ====================================================
+       🧮 料金シミュレーション計算ロジック
+       ==================================================== */
     function calculateRates() {
-        const giga = parseInt(document.getElementById('giga').value, 10);
+        // 念のためスライダーの値を直接書き換えられた場合も安全に取得
+        const sliderVal = parseInt(document.getElementById('giga').value, 10);
+        const giga = Math.min(120, Math.max(1, isNaN(sliderVal) ? currentGiga : sliderVal));
+
         const callOption = document.getElementById('call').value;
         const familyLines = parseInt(document.getElementById('family-lines').value, 10);
         const cardType = document.getElementById('card-type').value;
@@ -568,9 +752,7 @@
 
         let results = [];
 
-        /* ====================================================
-           💡 1. ドコモ
-           ==================================================== */
+        /* 💡 1. ドコモ */
         let docomoPlanName = ''; let docomoBase = 0; let docomoDiscount = 0; let docomoRecommend = '';
         let docomoCall = PLAN_CONFIG.callOption.standard[callOption];
 
@@ -616,9 +798,7 @@
             url: PLAN_CONFIG.urls.docomo
         });
 
-        /* ====================================================
-           💡 2. ahamo
-           ==================================================== */
+        /* 💡 2. ahamo */
         let ahamoBase = (giga <= 30) ? 2970 : 4950;
         let ahamoCall = PLAN_CONFIG.callOption.included5min[callOption];
         results.push({
@@ -630,9 +810,7 @@
             url: PLAN_CONFIG.urls.ahamo
         });
 
-        /* ====================================================
-           💡 3. au
-           ==================================================== */
+        /* 💡 3. au */
         let auPlanName = ''; let auBase = 0; let auDiscount = 0; let auCall = 0; let auRecommend = '';
 
         if (ageLimit === 'u18' && giga <= 20) {
@@ -667,9 +845,7 @@
             url: PLAN_CONFIG.urls.au
         });
 
-        /* ====================================================
-           💡 4. UQモバイル（ネット割・でんき割の重複回避ロジック）
-           ==================================================== */
+        /* 💡 4. UQモバイル（ネット割・でんき割の重複回避ロジック） */
         if (giga <= 35) {
             let uqTokutokuBase = (giga <= 5) ? 2948 : 4048;
             let uqTokutokuDiscount = 0;
@@ -718,9 +894,7 @@
             }
         }
 
-        /* ====================================================
-           💡 5. ソフトバンク
-           ==================================================== */
+        /* 💡 5. ソフトバンク */
         let sbDiscount = 0;
         if (cardType === 'paypay-gold') sbDiscount += 550;
         if (cardType === 'paypay-normal') sbDiscount += 330;
@@ -749,9 +923,7 @@
             });
         }
 
-        /* ====================================================
-           💡 6. Y!mobile
-           ==================================================== */
+        /* 💡 6. Y!mobile */
         if (giga <= 35) {
             let ymBase = (giga <= 5) ? 3278 : ((giga <= 30) ? 4378 : 5478);
             let ymDiscount = 0;
