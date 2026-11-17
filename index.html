@@ -765,7 +765,7 @@
             docomoRecommend = 'ライト利用向け';
         } else {
             if ((ageLimit === 'u18' || ageLimit === 'u22') && giga <= 30) {
-                docomoPlanName = 'ドコモ U22特'; docomoBase = 6798;
+                docomoPlanName = 'ドコモ U22割'; docomoBase = 6798;
                 if (cardType === 'd-gold') docomoDiscount += 550;
                 if (cardType === 'd-silver') docomoDiscount += 220;
                 if (hasNet) docomoDiscount += 1210;
@@ -914,7 +914,7 @@
             });
         } else {
             results.push({
-                name: 'SBメリハリ無制限系',
+                name: 'SBメリハリ無制限',
                 price: Math.max(0, 8008 - sbDiscount + sbCall),
                 class: 'softbank',
                 detail: `データ無制限<br>割引合計: -${sbDiscount.toLocaleString()}円`,
